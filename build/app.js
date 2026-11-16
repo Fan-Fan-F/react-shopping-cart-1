@@ -35,20 +35,27 @@ var App = React.createClass({displayName: "App",
         this.setState({ itemsInCart: items });
     },
     addItemToCart: function(item) {
+        if (!item) {
+            return;                         // dropped content that is not a product
+        }
         var items = this.state.itemsInCart;
         var existingItem = _.find(items, function(i) {
             return i.id == item.id;
         });
 
         if (existingItem) {                 // item already exists
-            existingItem.qty = existingItem.qty + 1
-        } else {                            // push new item
-            items.push({
+            items = items.map(function(i) {
+                return i.id == item.id
+                    ? { title: i.title, qty: i.qty + 1, price: i.price, id: i.id }
+                    : i;
+            });
+        } else {                            // append new item
+            items = items.concat({
                 title: item.title,
                 qty: 1,
                 price: item.price,
                 id: item.id
-            })
+            });
         }
         this.updateCart(items);
     },
@@ -67,7 +74,9 @@ var App = React.createClass({displayName: "App",
                 item = products[i];
             }
         }
-        this.addItemToCart(item);
+        if (item) {
+            this.addItemToCart(item);
+        }
     },
     handleDragStart: function(e) {
         var target = e.target;
@@ -127,11 +136,6 @@ var Cart = React.createClass({displayName: "Cart",
             items: []
         }
     },
-    getInitialState: function() {
-        return {
-            items: this.props.items,
-        }
-    },
     showBlankMessage: function() {
         return React.createElement("p", null, "No items in cart")
     },
@@ -143,27 +147,29 @@ var Cart = React.createClass({displayName: "Cart",
         return formatPrice(total);
     },
     renderItems: function() {
-        var items = this.state.items;
+        var items = this.props.items;
         return (
             React.createElement("div", null, 
                 React.createElement("h5", null, "Total ", this.getCartTotal(), " "), 
                 React.createElement("table", {className: "u-full-width"}, 
                     React.createElement("thead", null, 
-                        React.createElement("th", null, "Product"), 
-                        React.createElement("th", null, "Quantity"), 
-                        React.createElement("th", null, "Price")
+                        React.createElement("tr", null, 
+                            React.createElement("th", null, "Product"), 
+                            React.createElement("th", null, "Quantity"), 
+                            React.createElement("th", null, "Price")
+                        )
                     ), 
-                    React.createElement("tbody", null
-                    ), 
-                items.map(function(item) {
-                    return React.createElement(CartItem, {key: item.id, item: item})
-                })
+                    React.createElement("tbody", null, 
+                        items.map(function(item) {
+                            return React.createElement(CartItem, {key: item.id, item: item})
+                        })
+                    )
                 )
             )
         )
     },
     render: function() {
-        var items = this.state.items,
+        var items = this.props.items,
             createItems = this.renderItems();
         return (
             React.createElement("div", null, 
