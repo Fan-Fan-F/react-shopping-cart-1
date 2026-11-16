@@ -24,11 +24,7 @@ var Cart = React.createClass({
             items: []
         }
     },
-    getInitialState: function() {
-        return {
-            items: this.props.items,
-        }
-    },
+
     showBlankMessage: function() {
         return <p>No items in cart</p>
     },
@@ -40,27 +36,32 @@ var Cart = React.createClass({
         return formatPrice(total);
     },
     renderItems: function() {
-        var items = this.state.items;
+        // Read from props, not state: copying props into state in
+        // getInitialState made the cart permanently stale (it never
+        // re-rendered with new items).
+        var items = this.props.items;
         return (
             <div>
                 <h5>Total {this.getCartTotal()} </h5>
                 <table className='u-full-width'>
                     <thead>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                        </tr>
                     </thead>
                     <tbody>
+                    {items.map(function(item) {
+                        return <CartItem key={item.id} item={item} />
+                    })}
                     </tbody>
-                {items.map(function(item) {
-                    return <CartItem key={item.id} item={item} />
-                })}
                 </table>
             </div>
         )
     },
     render: function() {
-        var items = this.state.items,
+        var items = this.props.items,
             createItems = this.renderItems();
         return (
             <div>
